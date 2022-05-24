@@ -6,25 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/gorilla/mux"
-	//"github.com/golang/protobuf/proto"
-	//"google.golang.org/protobuf/encoding/protojson"
-
-	//collogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
-	//colmetricspb "go.opentelemetry.io/proto/otlp/collector/metrics/v1"
-	//coltracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
-	//commonpb "go.opentelemetry.io/proto/otlp/common/v1"
-	//logspb "go.opentelemetry.io/proto/otlp/logs/v1"
-	//metricspb "go.opentelemetry.io/proto/otlp/metrics/v1"
-	//resourcepb "go.opentelemetry.io/proto/otlp/resource/v1"
-	//tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
+	"github.com/labstack/echo/v4"
 )
 
 type SNSPublishAPI interface {
@@ -37,23 +24,22 @@ func PublishMessage(c context.Context, api SNSPublishAPI, input *sns.PublishInpu
 	return api.Publish(c, input)
 }
 
-func otelTesting(resp http.ResponseWriter, req *http.Request) {
-	contentLength := req.ContentLength
+func otelTesting(c echo.Context) error {
+	contentLength := c.Request().ContentLength
 	fmt.Printf("Content Length Received : %v\n", contentLength)
 
-	bodyBuffer, _ := ioutil.ReadAll(req.Body)
+	bodyBuffer, _ := ioutil.ReadAll(c.Request().Body)
 
 	fmt.Printf("Content Received : %v\n", bodyBuffer)
-	
-	topicARN := flag.String("t", "***REMOVED***",
-		"The ARN of the topic to which the user subscribes")
 
+	topicARN := aws.String("***REMOVED***")
+	
 	flag.Parse()
 
-	if *topicARN == "" {
+	if topicARN == nil {
 		fmt.Println("You must supply a message and topic ARN")
 		fmt.Println("-m MESSAGE -t TOPIC-ARN")
-		return
+		return c.String(http.StatusInternalServerError, "You must supply a message and topic ARN\n")
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
@@ -75,25 +61,22 @@ func otelTesting(resp http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Println("Got an error publishing the message:")
 		fmt.Println(err)
-		return
+		return c.String(http.StatusInternalServerError, "{\"message\":\"Internal Server Error\"} \n")
 	}
 
 	fmt.Println("Message ID: " + *result.MessageId)
+
+	return c.String(http.StatusAccepted, "\n")
 
 }
 
 func main() {
 
+	e := echo.New()
+
 	fmt.Println("Starting the API server...")
-	r := mux.NewRouter()
-	r.HandleFunc("/v1/traces", otelTesting).Methods("POST")
 
-	server := &http.Server{
-		Handler:      r,
-		Addr:         "0.0.0.0:4318",
-		WriteTimeout: 2 * time.Second,
-		ReadTimeout:  2 * time.Second,
-	}
+	e.GET("/v1/traces", otelTesting)
 
-	log.Fatal(server.ListenAndServe())
+	e.Logger.Fatal(e.Start(":4318"))
 }
