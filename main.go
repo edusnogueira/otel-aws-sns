@@ -32,7 +32,7 @@ func otelTesting(c echo.Context) error {
 
 	fmt.Printf("Content Received : %v\n", bodyBuffer)
 
-	topicARN := aws.String("***REMOVED***")
+	topicARN := aws.String("")
 	
 	flag.Parse()
 
