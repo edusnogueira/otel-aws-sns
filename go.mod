@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/sns v1.17.5
-	github.com/gorilla/mux v1.8.0
+	github.com/labstack/echo/v4 v4.7.2
 )
 
 require (
@@ -15,7 +15,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
-	github.com/labstack/echo/v4 v4.7.2 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
